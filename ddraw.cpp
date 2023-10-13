@@ -47,10 +47,6 @@ HRESULT WINAPI 	DirectDrawCreate(LPGUID lpGUID, LPDIRECTDRAW *lplpDD, LPUNKNOWN 
     return DDERR_UNSUPPORTED;
 }
 
-#define Direct3DDevicePatched_Impl 1
-#define Direct3D7Patched_Impl 1
-#define DirectDraw7Patched_Impl 1
-
 class DirectDraw7Patched : public IDirectDraw7
 {
     IDirectDraw7* mWrapped;
@@ -69,7 +65,6 @@ public:
     ULONG STDMETHODCALLTYPE AddRef() { return 0; }
     ULONG STDMETHODCALLTYPE Release() { return 0; }
 
-#if DirectDraw7Patched_Impl
     HRESULT STDMETHODCALLTYPE Compact();
     HRESULT STDMETHODCALLTYPE CreateClipper(DWORD dwFlags, LPDIRECTDRAWCLIPPER *lplpDDClipper, IUnknown *pUnkOuter);
     HRESULT STDMETHODCALLTYPE CreatePalette(DWORD dwFlags, LPPALETTEENTRY lpColorTable, LPDIRECTDRAWPALETTE *lplpDDPalette, IUnknown *pUnkOuter);
@@ -97,10 +92,8 @@ public:
     HRESULT STDMETHODCALLTYPE GetDeviceIdentifier(LPDDDEVICEIDENTIFIER2 pDDDI, DWORD dwFlags);
     HRESULT STDMETHODCALLTYPE StartModeTest(LPSIZE pModes, DWORD dwNumModes, DWORD dwFlags);
     HRESULT STDMETHODCALLTYPE EvaluateMode(DWORD dwFlags, DWORD  *pTimeout);
-#endif
 };
 
-#if DirectDraw7Patched_Impl
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::Compact()
     {
         log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
@@ -236,7 +229,6 @@ public:
         log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
     return mWrapped->EvaluateMode(dwFlags, pTimeout);
     }
-#endif
 
 class Direct3DDevicePatched : public IDirect3DDevice7
 {
@@ -255,7 +247,6 @@ public:
     ULONG STDMETHODCALLTYPE AddRef() { return 0; }
     ULONG STDMETHODCALLTYPE Release() { return 0; }
 
-#if Direct3DDevicePatched_Impl
     /* IDirect3DDevice7 */
    HRESULT STDMETHODCALLTYPE GetCaps(D3DDEVICEDESC7 *desc);
    HRESULT STDMETHODCALLTYPE EnumTextureFormats(LPD3DENUMPIXELFORMATSCALLBACK cb, void *ctx);
@@ -303,7 +294,6 @@ public:
    HRESULT STDMETHODCALLTYPE SetClipPlane(DWORD dwIndex,D3DVALUE *pPlaneEquation);
    HRESULT STDMETHODCALLTYPE GetClipPlane(DWORD dwIndex,D3DVALUE *pPlaneEquation);
    HRESULT STDMETHODCALLTYPE GetInfo(DWORD info_id, void *info, DWORD info_size);
-#endif
 };
 
 class Direct3D7Patched : public IDirect3D7
@@ -324,18 +314,13 @@ public:
     ULONG STDMETHODCALLTYPE AddRef() { return 0; }
     ULONG STDMETHODCALLTYPE Release() { return 0; }
 
-#if Direct3D7Patched_Impl
     /* IDirect3D7 */
     HRESULT STDMETHODCALLTYPE EnumDevices(LPD3DENUMDEVICESCALLBACK7, void*);
     HRESULT STDMETHODCALLTYPE CreateDevice(const IID&, IDirectDrawSurface7*, IDirect3DDevice7**);
     HRESULT STDMETHODCALLTYPE CreateVertexBuffer(D3DVERTEXBUFFERDESC*, IDirect3DVertexBuffer7**, DWORD);
     HRESULT STDMETHODCALLTYPE EnumZBufferFormats(const IID&, LPD3DENUMPIXELFORMATSCALLBACK, void*);
     HRESULT STDMETHODCALLTYPE EvictManagedTextures();
-#endif
 };
-
-
-#if Direct3DDevicePatched_Impl
 
 /* Implementation of the wrapper */
 HRESULT Direct3DDevicePatched::BeginScene() { log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
@@ -564,12 +549,8 @@ HRESULT Direct3DDevicePatched::GetInfo(DWORD info_id, void *info, DWORD info_siz
     return mWrapped->GetInfo(info_id, info, info_size);
 }
 
-#endif
-
-
 /***/
 
-#if Direct3D7Patched_Impl
 HRESULT Direct3D7Patched::EnumDevices(LPD3DENUMDEVICESCALLBACK7 cb, void *ctx)
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
@@ -590,7 +571,6 @@ HRESULT Direct3D7Patched::EvictManagedTextures()
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
     return mWrapped->EvictManagedTextures();
 }
-#endif
 
 /* wrapping setup on demand */
 static IDirectDraw7 *new_directDraw7 = nullptr;
