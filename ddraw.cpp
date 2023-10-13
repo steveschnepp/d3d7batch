@@ -8,11 +8,6 @@
 #include <ddraw.h>
 #include <d3d.h>
 
-//#define STDMETHODCALLTYPE WINAPI
-//typedef unsigned long ULONG;
-
-// extern "C" {
-
 static void log_printf(const char* format, ...) {
     va_list args;
     char buf[2048];
@@ -36,7 +31,6 @@ LPDIRECTDRAW7 orig_lpDD7;
 class Direct3D7Patched;
 class Direct3DDevicePatched;
 
-
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
     const char *DllMain_REASON[] = { "DLL_PROCESS_DETACH", "DLL_PROCESS_ATTACH", "DLL_THREAD_ATTACH", "DLL_THREAD_DETACH" };
 
@@ -52,8 +46,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
 HRESULT WINAPI 	DirectDrawCreate(LPGUID lpGUID, LPDIRECTDRAW *lplpDD, LPUNKNOWN pUnkOuter) {
     return DDERR_UNSUPPORTED;
 }
-
-// } // extern C
 
 #define Direct3DDevicePatched_Impl 1
 #define Direct3D7Patched_Impl 1
@@ -111,111 +103,138 @@ public:
 #if DirectDraw7Patched_Impl
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::Compact()
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->Compact();
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->Compact();
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::CreateClipper(DWORD dwFlags, LPDIRECTDRAWCLIPPER *lplpDDClipper, IUnknown *pUnkOuter)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->CreateClipper(dwFlags, lplpDDClipper, pUnkOuter);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->CreateClipper(dwFlags, lplpDDClipper, pUnkOuter);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::CreatePalette(DWORD dwFlags, LPPALETTEENTRY lpColorTable, LPDIRECTDRAWPALETTE *lplpDDPalette, IUnknown *pUnkOuter)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->CreatePalette(dwFlags, lpColorTable, lplpDDPalette, pUnkOuter);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->CreatePalette(dwFlags, lpColorTable, lplpDDPalette, pUnkOuter);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::CreateSurface(LPDDSURFACEDESC2 lpDDSurfaceDesc, LPDIRECTDRAWSURFACE7 *lplpDDSurface, IUnknown *pUnkOuter)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->CreateSurface(lpDDSurfaceDesc, lplpDDSurface, pUnkOuter);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->CreateSurface(lpDDSurfaceDesc, lplpDDSurface, pUnkOuter);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::DuplicateSurface(LPDIRECTDRAWSURFACE7 lpDDSurface, LPDIRECTDRAWSURFACE7 *lplpDupDDSurface)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->DuplicateSurface(lpDDSurface, lplpDupDDSurface);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->DuplicateSurface(lpDDSurface, lplpDupDDSurface);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::EnumDisplayModes(DWORD dwFlags, LPDDSURFACEDESC2 lpDDSurfaceDesc, LPVOID lpContext, LPDDENUMMODESCALLBACK2 lpEnumModesCallback)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->EnumDisplayModes(dwFlags, lpDDSurfaceDesc, lpContext, lpEnumModesCallback);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->EnumDisplayModes(dwFlags, lpDDSurfaceDesc, lpContext, lpEnumModesCallback);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::EnumSurfaces(DWORD dwFlags, LPDDSURFACEDESC2 lpDDSD, LPVOID lpContext, LPDDENUMSURFACESCALLBACK7 lpEnumSurfacesCallback)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->EnumSurfaces(dwFlags, lpDDSD, lpContext, lpEnumSurfacesCallback);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->EnumSurfaces(dwFlags, lpDDSD, lpContext, lpEnumSurfacesCallback);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::FlipToGDISurface()
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->FlipToGDISurface();
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->FlipToGDISurface();
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::GetCaps(LPDDCAPS lpDDDriverCaps, LPDDCAPS lpDDHELCaps)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetCaps(lpDDDriverCaps, lpDDHELCaps);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetCaps(lpDDDriverCaps, lpDDHELCaps);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::GetDisplayMode(LPDDSURFACEDESC2 lpDDSurfaceDesc)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetDisplayMode(lpDDSurfaceDesc);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetDisplayMode(lpDDSurfaceDesc);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::GetFourCCCodes(LPDWORD lpNumCodes, LPDWORD lpCodes)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetFourCCCodes(lpNumCodes, lpCodes);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetFourCCCodes(lpNumCodes, lpCodes);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::GetGDISurface(LPDIRECTDRAWSURFACE7 *lplpGDIDDSurface)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetGDISurface(lplpGDIDDSurface);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetGDISurface(lplpGDIDDSurface);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::GetMonitorFrequency(LPDWORD lpdwFrequency)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetMonitorFrequency(lpdwFrequency);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetMonitorFrequency(lpdwFrequency);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::GetScanLine(LPDWORD lpdwScanLine)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetScanLine(lpdwScanLine);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetScanLine(lpdwScanLine);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::GetVerticalBlankStatus(WINBOOL *lpbIsInVB)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetVerticalBlankStatus(lpbIsInVB);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetVerticalBlankStatus(lpbIsInVB);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::Initialize(GUID *lpGUID)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->Initialize(lpGUID);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->Initialize(lpGUID);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::RestoreDisplayMode()
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->RestoreDisplayMode();
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->RestoreDisplayMode();
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::SetCooperativeLevel(HWND hWnd, DWORD dwFlags)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetCooperativeLevel(hWnd, dwFlags);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetCooperativeLevel(hWnd, dwFlags);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::SetDisplayMode(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetDisplayMode(dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetDisplayMode(dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::WaitForVerticalBlank(DWORD dwFlags, HANDLE hEvent)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->WaitForVerticalBlank(dwFlags, hEvent);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->WaitForVerticalBlank(dwFlags, hEvent);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::GetAvailableVidMem(LPDDSCAPS2 lpDDCaps, LPDWORD lpdwTotal, LPDWORD lpdwFree)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetAvailableVidMem(lpDDCaps, lpdwTotal, lpdwFree);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetAvailableVidMem(lpDDCaps, lpdwTotal, lpdwFree);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::GetSurfaceFromDC(HDC hdc, LPDIRECTDRAWSURFACE7 *pSurf)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetSurfaceFromDC(hdc, pSurf);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetSurfaceFromDC(hdc, pSurf);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::RestoreAllSurfaces()
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->RestoreAllSurfaces();
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->RestoreAllSurfaces();
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::TestCooperativeLevel()
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->TestCooperativeLevel();
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->TestCooperativeLevel();
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::GetDeviceIdentifier(LPDDDEVICEIDENTIFIER2 pDDDI, DWORD dwFlags)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetDeviceIdentifier(pDDDI, dwFlags);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetDeviceIdentifier(pDDDI, dwFlags);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::StartModeTest(LPSIZE pModes, DWORD dwNumModes, DWORD dwFlags)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->StartModeTest(pModes, dwNumModes, dwFlags);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->StartModeTest(pModes, dwNumModes, dwFlags);
     }
     HRESULT STDMETHODCALLTYPE DirectDraw7Patched::EvaluateMode(DWORD dwFlags, DWORD *pTimeout)
     {
-        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->EvaluateMode(dwFlags, pTimeout);
+        log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->EvaluateMode(dwFlags, pTimeout);
     }
 #endif
 
@@ -319,184 +338,230 @@ public:
 #if Direct3DDevicePatched_Impl
 
 /* Implementation of the wrapper */
-HRESULT Direct3DDevicePatched::BeginScene() { log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->BeginScene(); }
-HRESULT Direct3DDevicePatched::EndScene() { log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->EndScene(); }
+HRESULT Direct3DDevicePatched::BeginScene() { log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->BeginScene(); }
+HRESULT Direct3DDevicePatched::EndScene() { log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->EndScene(); }
 
-HRESULT Direct3DDevicePatched::GetCaps(D3DDEVICEDESC7 *desc) { log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetCaps(desc); }
+HRESULT Direct3DDevicePatched::GetCaps(D3DDEVICEDESC7 *desc) { log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetCaps(desc); }
 
 HRESULT Direct3DDevicePatched::EnumTextureFormats(LPD3DENUMPIXELFORMATSCALLBACK cb, void *ctx)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->EnumTextureFormats(cb, ctx);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->EnumTextureFormats(cb, ctx);
 }
 
 HRESULT Direct3DDevicePatched::GetDirect3D(IDirect3D7 **d3d)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetDirect3D(d3d);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetDirect3D(d3d);
 }
 HRESULT Direct3DDevicePatched::SetRenderTarget(IDirectDrawSurface7 *surface, DWORD flags)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetRenderTarget(surface, flags);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetRenderTarget(surface, flags);
 }
 HRESULT Direct3DDevicePatched::GetRenderTarget(IDirectDrawSurface7 **surface)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetRenderTarget(surface);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetRenderTarget(surface);
 }
 HRESULT Direct3DDevicePatched::Clear(DWORD count, D3DRECT *rects, DWORD flags, D3DCOLOR color, D3DVALUE z, DWORD stencil)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->Clear(count, rects, flags, color, z, stencil);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->Clear(count, rects, flags, color, z, stencil);
 }
 
 HRESULT Direct3DDevicePatched::SetTransform(D3DTRANSFORMSTATETYPE state, D3DMATRIX *matrix)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetTransform(state, matrix);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetTransform(state, matrix);
 }
 HRESULT Direct3DDevicePatched::GetTransform(D3DTRANSFORMSTATETYPE state, D3DMATRIX *matrix)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetTransform(state, matrix);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetTransform(state, matrix);
 }
 HRESULT Direct3DDevicePatched::SetViewport(D3DVIEWPORT7 *data)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetViewport(data);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetViewport(data);
 }
 HRESULT Direct3DDevicePatched::MultiplyTransform(D3DTRANSFORMSTATETYPE state, D3DMATRIX *matrix)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->MultiplyTransform(state, matrix);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->MultiplyTransform(state, matrix);
 }
 HRESULT Direct3DDevicePatched::GetViewport(D3DVIEWPORT7 *data)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetViewport(data);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetViewport(data);
 }
 HRESULT Direct3DDevicePatched::SetMaterial(D3DMATERIAL7 *data)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetMaterial(data);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetMaterial(data);
 }
 HRESULT Direct3DDevicePatched::GetMaterial(D3DMATERIAL7 *data)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetMaterial(data);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetMaterial(data);
 }
 HRESULT Direct3DDevicePatched::SetLight(DWORD idx, D3DLIGHT7 *data)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetLight(idx, data);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetLight(idx, data);
 }
 HRESULT Direct3DDevicePatched::GetLight(DWORD idx, D3DLIGHT7 *data)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetLight(idx, data);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetLight(idx, data);
 }
 HRESULT Direct3DDevicePatched::SetRenderState(D3DRENDERSTATETYPE dwRenderStateType, DWORD dwRenderState)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetRenderState(dwRenderStateType, dwRenderState);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetRenderState(dwRenderStateType, dwRenderState);
 }
 HRESULT Direct3DDevicePatched::GetRenderState(D3DRENDERSTATETYPE dwRenderStateType, LPDWORD lpdwRenderState)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetRenderState(dwRenderStateType, lpdwRenderState);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetRenderState(dwRenderStateType, lpdwRenderState);
 }
 HRESULT Direct3DDevicePatched::BeginStateBlock()
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->BeginStateBlock();
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->BeginStateBlock();
 }
 HRESULT Direct3DDevicePatched::EndStateBlock(LPDWORD lpdwBlockHandle)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->EndStateBlock(lpdwBlockHandle);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->EndStateBlock(lpdwBlockHandle);
 }
 HRESULT Direct3DDevicePatched::PreLoad(IDirectDrawSurface7 *surface)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->PreLoad(surface);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->PreLoad(surface);
 }
 HRESULT Direct3DDevicePatched::DrawPrimitive(D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count, DWORD flags)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->DrawPrimitive(primitive_type, fvf, vertices, vertex_count, flags);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->DrawPrimitive(primitive_type, fvf, vertices, vertex_count, flags);
 }
 HRESULT Direct3DDevicePatched::DrawIndexedPrimitive(D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count, WORD *indices, DWORD index_count, DWORD flags)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->DrawIndexedPrimitive(primitive_type, fvf, vertices, vertex_count, indices, index_count, flags);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->DrawIndexedPrimitive(primitive_type, fvf, vertices, vertex_count, indices, index_count, flags);
 }
 HRESULT Direct3DDevicePatched::SetClipStatus(D3DCLIPSTATUS *clip_status)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetClipStatus(clip_status);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetClipStatus(clip_status);
 }
 HRESULT Direct3DDevicePatched::GetClipStatus(D3DCLIPSTATUS *clip_status)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetClipStatus(clip_status);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetClipStatus(clip_status);
 }
 HRESULT Direct3DDevicePatched::DrawPrimitiveStrided(D3DPRIMITIVETYPE primitive_type, DWORD fvf, D3DDRAWPRIMITIVESTRIDEDDATA *strided_data, DWORD vertex_count, DWORD flags)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->DrawPrimitiveStrided(primitive_type, fvf, strided_data, vertex_count, flags);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->DrawPrimitiveStrided(primitive_type, fvf, strided_data, vertex_count, flags);
 }
 HRESULT Direct3DDevicePatched::DrawIndexedPrimitiveStrided(D3DPRIMITIVETYPE primitive_type, DWORD fvf, D3DDRAWPRIMITIVESTRIDEDDATA *strided_data, DWORD vertex_count, WORD *indices, DWORD index_count, DWORD flags)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->DrawIndexedPrimitiveStrided(primitive_type, fvf, strided_data, vertex_count, indices, index_count, flags);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->DrawIndexedPrimitiveStrided(primitive_type, fvf, strided_data, vertex_count, indices, index_count, flags);
 }
 HRESULT Direct3DDevicePatched::DrawPrimitiveVB(D3DPRIMITIVETYPE primitive_type, struct IDirect3DVertexBuffer7 *vb, DWORD start_vertex, DWORD vertex_count, DWORD flags)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->DrawPrimitiveVB(primitive_type, vb, start_vertex, vertex_count, flags);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->DrawPrimitiveVB(primitive_type, vb, start_vertex, vertex_count, flags);
 }
 HRESULT Direct3DDevicePatched::DrawIndexedPrimitiveVB(D3DPRIMITIVETYPE primitive_type, struct IDirect3DVertexBuffer7 *vb, DWORD start_vertex, DWORD vertex_count, WORD *indices, DWORD index_count, DWORD flags)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->DrawIndexedPrimitiveVB(primitive_type, vb, start_vertex, vertex_count, indices, index_count, flags);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->DrawIndexedPrimitiveVB(primitive_type, vb, start_vertex, vertex_count, indices, index_count, flags);
 }
 HRESULT Direct3DDevicePatched::ComputeSphereVisibility(D3DVECTOR *centers, D3DVALUE *radii, DWORD sphere_count, DWORD flags, DWORD *ret)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->ComputeSphereVisibility(centers, radii, sphere_count, flags, ret);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->ComputeSphereVisibility(centers, radii, sphere_count, flags, ret);
 }
 HRESULT Direct3DDevicePatched::GetTexture(DWORD stage, IDirectDrawSurface7 **surface)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetTexture(stage, surface);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetTexture(stage, surface);
 }
 HRESULT Direct3DDevicePatched::SetTexture(DWORD stage, IDirectDrawSurface7 *surface)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetTexture(stage, surface);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetTexture(stage, surface);
 }
 HRESULT Direct3DDevicePatched::GetTextureStageState(DWORD dwStage, D3DTEXTURESTAGESTATETYPE d3dTexStageStateType,LPDWORD lpdwState)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetTextureStageState(dwStage, d3dTexStageStateType, lpdwState);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetTextureStageState(dwStage, d3dTexStageStateType, lpdwState);
 }
 HRESULT Direct3DDevicePatched::SetTextureStageState(DWORD dwStage, D3DTEXTURESTAGESTATETYPE d3dTexStageStateType,DWORD dwState)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetTextureStageState(dwStage, d3dTexStageStateType, dwState);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetTextureStageState(dwStage, d3dTexStageStateType, dwState);
 }
 HRESULT Direct3DDevicePatched::ValidateDevice(LPDWORD lpdwPasses)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->ValidateDevice(lpdwPasses);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->ValidateDevice(lpdwPasses);
 }
 HRESULT Direct3DDevicePatched::ApplyStateBlock(DWORD dwBlockHandle)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->ApplyStateBlock(dwBlockHandle);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->ApplyStateBlock(dwBlockHandle);
 }
 HRESULT Direct3DDevicePatched::CaptureStateBlock(DWORD dwBlockHandle)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->CaptureStateBlock(dwBlockHandle);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->CaptureStateBlock(dwBlockHandle);
 }
 HRESULT Direct3DDevicePatched::DeleteStateBlock(DWORD dwBlockHandle)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->DeleteStateBlock(dwBlockHandle);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->DeleteStateBlock(dwBlockHandle);
 }
 HRESULT Direct3DDevicePatched::CreateStateBlock(D3DSTATEBLOCKTYPE d3dsbType,LPDWORD lpdwBlockHandle)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->CreateStateBlock(d3dsbType, lpdwBlockHandle);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->CreateStateBlock(d3dsbType, lpdwBlockHandle);
 }
 HRESULT Direct3DDevicePatched::Load(IDirectDrawSurface7 *dst_surface, POINT *dst_point, IDirectDrawSurface7 *src_surface, RECT *src_rect, DWORD flags)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->Load(dst_surface, dst_point, src_surface, src_rect, flags);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->Load(dst_surface, dst_point, src_surface, src_rect, flags);
 }
 HRESULT Direct3DDevicePatched::LightEnable(DWORD dwLightIndex,WINBOOL bEnable)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->LightEnable(dwLightIndex, bEnable);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->LightEnable(dwLightIndex, bEnable);
 }
 HRESULT Direct3DDevicePatched::GetLightEnable(DWORD dwLightIndex,WINBOOL *pbEnable)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetLightEnable(dwLightIndex, pbEnable);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetLightEnable(dwLightIndex, pbEnable);
 }
 HRESULT Direct3DDevicePatched::SetClipPlane(DWORD dwIndex,D3DVALUE *pPlaneEquation)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->SetClipPlane(dwIndex, pPlaneEquation);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->SetClipPlane(dwIndex, pPlaneEquation);
 }
 HRESULT Direct3DDevicePatched::GetClipPlane(DWORD dwIndex,D3DVALUE *pPlaneEquation)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetClipPlane(dwIndex, pPlaneEquation);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetClipPlane(dwIndex, pPlaneEquation);
 }
 HRESULT Direct3DDevicePatched::GetInfo(DWORD info_id, void *info, DWORD info_size)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->GetInfo(info_id, info, info_size);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->GetInfo(info_id, info, info_size);
 }
 
 #endif
@@ -507,19 +572,23 @@ HRESULT Direct3DDevicePatched::GetInfo(DWORD info_id, void *info, DWORD info_siz
 #if Direct3D7Patched_Impl
 HRESULT Direct3D7Patched::EnumDevices(LPD3DENUMDEVICESCALLBACK7 cb, void *ctx)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->EnumDevices(cb, ctx);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->EnumDevices(cb, ctx);
 }
 HRESULT Direct3D7Patched::CreateVertexBuffer(D3DVERTEXBUFFERDESC *desc, struct IDirect3DVertexBuffer7 **buffer, DWORD flags)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->CreateVertexBuffer(desc,  buffer, flags);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->CreateVertexBuffer(desc,  buffer, flags);
 }
 HRESULT Direct3D7Patched::EnumZBufferFormats(REFCLSID device_iid, LPD3DENUMPIXELFORMATSCALLBACK cb, void *ctx)
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->EnumZBufferFormats(device_iid, cb, ctx);
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->EnumZBufferFormats(device_iid, cb, ctx);
 }
 HRESULT Direct3D7Patched::EvictManagedTextures()
 {
-    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__); return mWrapped->EvictManagedTextures();
+    log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->EvictManagedTextures();
 }
 #endif
 
