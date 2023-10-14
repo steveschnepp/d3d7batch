@@ -1,3 +1,5 @@
+CXX=i686-w64-mingw32-g++
+
 ddraw.dll: ddraw.o ddraw.def
 	$(CXX) -m32 -o ddraw.dll $^ -mdll -static-libgcc -static-libstdc++ -lole32
 
