@@ -54,7 +54,6 @@ class DirectDraw7Patched : public IDirectDraw7
     IDirectDraw7* mWrapped;
 
     IDirect3D7 *new_direct3D7 = nullptr;
-    IDirect3DDevice7 *new_d3dDevice7 = nullptr;
 
 public:
     DirectDraw7Patched(IDirectDraw7* wrapped) : mWrapped(wrapped) {
@@ -301,6 +300,7 @@ public:
 class Direct3D7Patched : public IDirect3D7
 {
     IDirect3D7* mWrapped;
+    IDirect3DDevice7 *new_d3dDevice7 = nullptr;
 
 public:
     Direct3D7Patched(IDirect3D7* wrapped) : mWrapped(wrapped) {
@@ -628,12 +628,21 @@ HRESULT Direct3D7Patched::CreateDevice(REFCLSID rclsid, IDirectDrawSurface7 *sur
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
 
+    {
+        LPOLESTR lplpsz;
+        StringFromIID(rclsid, &lplpsz);
+        log_printf("CreateDevice(%ls)\n", lplpsz);
+    }
+
+    HRESULT r = S_OK;
+    if (new_d3dDevice7) goto cached;
+
     struct IDirect3DDevice7 *orig_device;
-    HRESULT r = mWrapped->CreateDevice(rclsid, surface, &orig_device);
+    r = mWrapped->CreateDevice(rclsid, surface, &orig_device);
 
-    IDirect3DDevice7 *new_d3dDevice7 = new Direct3DDevicePatched(orig_device);
+    new_d3dDevice7 = new Direct3DDevicePatched(orig_device);
 
+cached:
     *device = new_d3dDevice7;
-
     return r;
 }
