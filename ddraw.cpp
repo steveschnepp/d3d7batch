@@ -16,9 +16,11 @@ static void log_printf(const char* format, ...) {
     vsprintf(buf, format, args);
     va_end(args);
 
+#if DEBUG_STDOUT
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
+#endif
 
     OutputDebugString(buf);
 }
