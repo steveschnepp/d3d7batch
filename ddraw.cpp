@@ -8,8 +8,8 @@
 #include <ddraw.h>
 #include <d3d.h>
 
-#define WRAP lprintf
-#define TRACE lprintf
+#define WRAP
+#define TRACE
 #define TRACE_(x, ...)
 #define INFO lprintf
 #define TRACE_(x, ...)
@@ -21,7 +21,7 @@
 #define WARN_(x, ...)
 
 #define d3d_perf
-#define DEBUG_STDOUT 1
+#define DEBUG_STDOUT 0
 
 static void lprintf(const char* format, ...) {
     va_list args;
