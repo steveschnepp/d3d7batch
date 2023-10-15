@@ -38,6 +38,16 @@ static void log_printf(const char* format, ...) {
     OutputDebugString(buf);
 }
 
+static
+DWORD
+get_flexible_vertex_size(DWORD d3dvtVertexType)
+{
+	switch(d3dvtVertexType) {
+		case 0x2c4: return 4096;
+	}
+	return 1;
+}
+
 typedef HRESULT ( WINAPI* LPDIRECTDRAWCREATEEX )( GUID FAR * lpGuid, LPVOID  *lplpDD, REFIID  iid,IUnknown FAR *pUnkOuter );
 
 HINSTANCE orig_hInstDDraw;
@@ -244,11 +254,38 @@ public:
     return mWrapped->EvaluateMode(dwFlags, pTimeout);
     }
 
+#define VERTEX_BATCH_SIZE_INITIAL 16
+#define VERTEX_BATCH_SIZE_MAX     4096
+
+struct vertex_batch {
+    D3DPRIMITIVETYPE primitive_type;
+    DWORD fvf;
+    UINT stride;
+    char *vertices;
+
+    /* vertex_count arg has a DWORD type in D3D calls,
+     * but we won't go beyond an unsigned int capacity, as documentation says
+     * it is limited to D3DMAXNUMVERTICES (65,535) */
+    unsigned int vertex_count;
+    unsigned int vertex_pos;
+    unsigned int vertex_batch_size;
+};
+
+
 class Direct3DDevicePatched : public IDirect3DDevice7
 {
     IDirect3DDevice7* mWrapped;
 
+
+static HRESULT ddraw_buffer_add(Direct3DDevicePatched *device, D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count, DWORD flags, UINT stride);
+static HRESULT ddraw_buffer_flush(Direct3DDevicePatched *device);
+static HRESULT ddraw_buffer_flush_if_needed(Direct3DDevicePatched *device);
+static void ddraw_buffer_add_indices_list(Direct3DDevicePatched *device, void* vertices, DWORD vertex_count);
+
 public:
+    /* Vertex buffer for squashing DrawPrimitive() calls before sending it to Direct3D7 */
+    struct vertex_batch vertex_batch;
+
     Direct3DDevicePatched(IDirect3DDevice7* wrapped) : mWrapped(wrapped) {
         log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
     }
@@ -446,6 +483,14 @@ HRESULT Direct3DDevicePatched::PreLoad(IDirectDrawSurface7 *surface)
 HRESULT Direct3DDevicePatched::DrawPrimitive(D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count, DWORD flags)
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+
+    UINT stride = get_flexible_vertex_size(fvf);
+    HRESULT hr = ddraw_buffer_add(this, primitive_type, fvf, vertices, vertex_count, flags, stride);
+
+    /* buffered, return immediatly */
+    if (hr == D3D_OK) return D3D_OK;
+
+    /* buffering failed, delegate */
     return mWrapped->DrawPrimitive(primitive_type, fvf, vertices, vertex_count, flags);
 }
 HRESULT Direct3DDevicePatched::DrawIndexedPrimitive(D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count, WORD *indices, DWORD index_count, DWORD flags)
@@ -658,4 +703,156 @@ HRESULT Direct3D7Patched::CreateDevice(REFCLSID rclsid, IDirectDrawSurface7 *sur
 cached:
     *device = new_d3dDevice7;
     return r;
+}
+
+/** Buffering **/
+
+/* static counters. No need to protect them too much, it's just for basics stats
+ * therefore their performance is much more important than accurary */
+static unsigned int buffer_adds = 0;
+static unsigned int buffer_flushs = 0;
+
+/* Flushing the buffer if it isn't empty.
+ *
+ * It will delegate to a single call to wined3d with the correct parameters,
+ * and a (hopefully) huge list of vertices/indices. */
+HRESULT Direct3DDevicePatched::ddraw_buffer_flush(Direct3DDevicePatched *device)
+{
+    HRESULT hr;
+
+    buffer_flushs ++;
+
+    // Delegate the call with the full buffer
+    {
+	D3DPRIMITIVETYPE primitive_type = device->vertex_batch.primitive_type;
+	if (primitive_type == D3DPT_TRIANGLEFAN) primitive_type = D3DPT_TRIANGLELIST;
+	DWORD fvf = device->vertex_batch.fvf;
+	void *vertices = device->vertex_batch.vertices;
+	DWORD vertex_count = device->vertex_batch.vertex_count;
+	DWORD flags = 0;
+
+	hr = device->mWrapped->DrawPrimitive(primitive_type, fvf, vertices, vertex_count, flags);
+    }
+
+done:
+
+//    free(device->vertex_batch.vertices);
+//    device->vertex_batch.vertices = NULL;
+
+    /* Reset the buffer */
+    device->vertex_batch.vertex_count = 0;
+
+    return hr;
+}
+
+void Direct3DDevicePatched::ddraw_buffer_add_indices_list(Direct3DDevicePatched *device, void* vertices, DWORD vertex_count) {
+    UINT stride = device->vertex_batch.stride;
+
+    /* All the points are already in the same order, copy them over */
+    memcpy(device->vertex_batch.vertices + device->vertex_batch.vertex_count * stride, vertices, vertex_count * stride);
+    device->vertex_batch.vertex_count += vertex_count;
+}
+
+static void ddraw_buffer_add_indices_trianglefan(Direct3DDevicePatched *device, void* vertices, DWORD vertex_count) {
+    UINT stride = device->vertex_batch.stride;
+    unsigned int idx;
+
+    /* The first triangle is the same, therefore the vertexesh are simply copied over */
+    memcpy(device->vertex_batch.vertices + device->vertex_batch.vertex_count * stride, vertices, 3 * stride);
+    device->vertex_batch.vertex_count += 3;
+
+    /* Next triangles are recreated with : 2 next vertices then the 1rst one.
+     * So, it will *increase* the number of total vertices from 4 to 6, 5 to 9, 6 to 12, ... */
+    for (idx = 2; idx < vertex_count-1; idx ++) {
+        char* next_vertice = (char*) vertices + idx * stride;
+
+        /* Copy the 2 next ones */
+        memcpy(device->vertex_batch.vertices + device->vertex_batch.vertex_count * stride, next_vertice, 2 * stride);
+        device->vertex_batch.vertex_count += 2;
+
+        /* Copy the first one again */
+        memcpy(device->vertex_batch.vertices + device->vertex_batch.vertex_count * stride, vertices, stride);
+        device->vertex_batch.vertex_count += 1;
+    }
+}
+
+/*
+ * Note : Adding to the buffer transforms the D3DPT_TRIANGLEFAN primitive into a D3DPT_TRIANGLELIST.
+ * Otherwise, we cannot concatenate them as TRIANGLE FAN has the first vertex in common to the whole list.
+ */
+HRESULT Direct3DDevicePatched::ddraw_buffer_add(Direct3DDevicePatched *device, D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count, DWORD flags, UINT stride) {
+    HRESULT hr;
+
+    TRACE("device %p, primitive_type %#x, fvf %#lx, vertices %p, vertex_count %lu, flags %#lx, stride %u.\n",
+            device, primitive_type, fvf, vertices, vertex_count, flags, stride);
+    buffer_adds ++;
+
+    if (device->vertex_batch.vertex_count) {
+        /* if already-buffered vertexes do not match the one that we want to add, flush. */
+        if (primitive_type != device->vertex_batch.primitive_type) {
+            TRACE_(d3d_perf)("Buffering failed due to mismatched primitive_type %d != buffer.primitive_type %d \n", primitive_type, device->vertex_batch.primitive_type);
+            ddraw_buffer_flush(device);
+        } else if (fvf != device->vertex_batch.fvf) {
+            TRACE_(d3d_perf)("Buffering failed due to mismatched fvf %ld != buffer.fvf %ld \n", fvf, device->vertex_batch.fvf);
+            ddraw_buffer_flush(device);
+        } else if (device->vertex_batch.vertex_count + vertex_count * 2 > device->vertex_batch.vertex_batch_size) {
+            /* We double the number of vertices to add since
+             * - it is a very fast mul
+             * - the number will never more than double
+             * - the precision it offers is good enough */
+            FIXME_(d3d_perf)("Full buffer vertex_batch.vertex_count %u, vertex_count %lu, vertex_batch_size %u \n",
+			    device->vertex_batch.vertex_count, vertex_count, device->vertex_batch.vertex_batch_size);
+            ddraw_buffer_flush(device);
+
+	    /* Doubling size until quite big */
+	    if (device->vertex_batch.vertex_batch_size < VERTEX_BATCH_SIZE_MAX)
+		    device->vertex_batch.vertex_batch_size *= 2;
+        }
+    }
+
+    switch(primitive_type) {
+        case D3DPT_TRIANGLEFAN:
+        case D3DPT_LINELIST:
+        case D3DPT_POINTLIST:
+            /* Supported primitives */
+            break;
+        default:
+            FIXME("primitive_type %#x is not supported, not buffering\n", primitive_type);
+            goto fail;
+    }
+
+    /* Need to test again vertex_count as a flush resets it to 0 */
+    if (! device->vertex_batch.vertex_count) {
+        /* New buffer, setting everything up */
+        device->vertex_batch.primitive_type = primitive_type;
+        device->vertex_batch.fvf = fvf;
+        device->vertex_batch.stride = stride;
+	device->vertex_batch.vertices = (char*) realloc(device->vertex_batch.vertices, device->vertex_batch.vertex_batch_size * stride);
+    }
+
+    /* Create the index */
+    switch(primitive_type) {
+        case D3DPT_TRIANGLEFAN:
+            if (vertex_count < 3) {
+                WARN("vertex_count %lu lower than 3. not buffering.\n", vertex_count);
+                goto fail;
+            }
+            ddraw_buffer_add_indices_trianglefan(device, vertices, vertex_count);
+            break;
+        case D3DPT_LINELIST:
+        case D3DPT_POINTLIST:
+            ddraw_buffer_add_indices_list(device, vertices, vertex_count);
+            break;
+        default:
+            ERR("primitive_type %#x not supported\n", primitive_type);
+    }
+
+    /* Buffered ! */
+    return D3D_OK;
+
+fail:
+    if (device->vertex_batch.vertices) {
+        device->vertex_batch.vertices = NULL;
+    }
+    return E_NOTIMPL;
 }
