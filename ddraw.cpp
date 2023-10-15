@@ -8,6 +8,19 @@
 #include <ddraw.h>
 #include <d3d.h>
 
+#define TRACE log_printf
+#define TRACE_(x, ...)
+#define FIXME(x, ...)
+#define FIXME_(x, ...)
+#define ERR(x, ...)
+#define ERR_(x, ...)
+#define WARN(x, ...)
+#define WARN_(x, ...)
+
+#define d3d_perf
+#define DEBUG_STDOUT 1
+
+
 static void log_printf(const char* format, ...) {
     va_list args;
     char buf[2048];
