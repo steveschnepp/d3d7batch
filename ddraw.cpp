@@ -286,7 +286,7 @@ struct vertex_batch {
     D3DPRIMITIVETYPE primitive_type;
     DWORD fvf;
     UINT stride;
-    char *vertices;
+    char vertices[65535*1024];
 
     /* vertex_count arg has a DWORD type in D3D calls,
      * but we won't go beyond an unsigned int capacity, as documentation says
@@ -296,23 +296,23 @@ struct vertex_batch {
     unsigned int vertex_batch_size;
 };
 
-
 class Direct3DDevicePatched : public IDirect3DDevice7
 {
     IDirect3DDevice7* mWrapped;
 
 
 static HRESULT ddraw_buffer_add(Direct3DDevicePatched *device, D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count, DWORD flags, UINT stride);
-static HRESULT ddraw_buffer_flush(Direct3DDevicePatched *device);
-static HRESULT ddraw_buffer_flush_if_needed(Direct3DDevicePatched *device);
 static void ddraw_buffer_add_indices_list(Direct3DDevicePatched *device, void* vertices, DWORD vertex_count);
 
 public:
+static HRESULT ddraw_buffer_flush(Direct3DDevicePatched *device);
     /* Vertex buffer for squashing DrawPrimitive() calls before sending it to Direct3D7 */
     struct vertex_batch vertex_batch;
 
     Direct3DDevicePatched(IDirect3DDevice7* wrapped) : mWrapped(wrapped) {
         log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+	vertex_batch.vertex_count = 0;
+	vertex_batch.vertex_batch_size = VERTEX_BATCH_SIZE_INITIAL;
     }
 
     /* IUnknown */
@@ -372,6 +372,16 @@ public:
    HRESULT STDMETHODCALLTYPE GetInfo(DWORD info_id, void *info, DWORD info_size);
 };
 
+static HRESULT ddraw_buffer_flush_if_needed(Direct3DDevicePatched *device) {
+    /* Nothing to do if it is empty */
+    if (! device)
+	    return D3D_OK;
+    if (! device->vertex_batch.vertex_count)
+	    return D3D_OK;
+
+    return Direct3DDevicePatched::ddraw_buffer_flush(device);
+}
+
 class Direct3D7Patched : public IDirect3D7
 {
     IDirect3D7* mWrapped;
@@ -403,6 +413,7 @@ public:
 HRESULT Direct3DDevicePatched::BeginScene() { log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
     return mWrapped->BeginScene(); }
 HRESULT Direct3DDevicePatched::EndScene() { log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+	ddraw_buffer_flush_if_needed(this);
     return mWrapped->EndScene(); }
 
 HRESULT Direct3DDevicePatched::GetCaps(D3DDEVICEDESC7 *desc) { log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
@@ -422,6 +433,7 @@ HRESULT Direct3DDevicePatched::GetDirect3D(IDirect3D7 **d3d)
 HRESULT Direct3DDevicePatched::SetRenderTarget(IDirectDrawSurface7 *surface, DWORD flags)
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+	ddraw_buffer_flush_if_needed(this);
     return mWrapped->SetRenderTarget(surface, flags);
 }
 HRESULT Direct3DDevicePatched::GetRenderTarget(IDirectDrawSurface7 **surface)
@@ -438,6 +450,7 @@ HRESULT Direct3DDevicePatched::Clear(DWORD count, D3DRECT *rects, DWORD flags, D
 HRESULT Direct3DDevicePatched::SetTransform(D3DTRANSFORMSTATETYPE state, D3DMATRIX *matrix)
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+	ddraw_buffer_flush_if_needed(this);
     return mWrapped->SetTransform(state, matrix);
 }
 HRESULT Direct3DDevicePatched::GetTransform(D3DTRANSFORMSTATETYPE state, D3DMATRIX *matrix)
@@ -448,11 +461,13 @@ HRESULT Direct3DDevicePatched::GetTransform(D3DTRANSFORMSTATETYPE state, D3DMATR
 HRESULT Direct3DDevicePatched::SetViewport(D3DVIEWPORT7 *data)
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+	ddraw_buffer_flush_if_needed(this);
     return mWrapped->SetViewport(data);
 }
 HRESULT Direct3DDevicePatched::MultiplyTransform(D3DTRANSFORMSTATETYPE state, D3DMATRIX *matrix)
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+	ddraw_buffer_flush_if_needed(this);
     return mWrapped->MultiplyTransform(state, matrix);
 }
 HRESULT Direct3DDevicePatched::GetViewport(D3DVIEWPORT7 *data)
@@ -463,6 +478,7 @@ HRESULT Direct3DDevicePatched::GetViewport(D3DVIEWPORT7 *data)
 HRESULT Direct3DDevicePatched::SetMaterial(D3DMATERIAL7 *data)
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+	ddraw_buffer_flush_if_needed(this);
     return mWrapped->SetMaterial(data);
 }
 HRESULT Direct3DDevicePatched::GetMaterial(D3DMATERIAL7 *data)
@@ -473,6 +489,7 @@ HRESULT Direct3DDevicePatched::GetMaterial(D3DMATERIAL7 *data)
 HRESULT Direct3DDevicePatched::SetLight(DWORD idx, D3DLIGHT7 *data)
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+	ddraw_buffer_flush_if_needed(this);
     return mWrapped->SetLight(idx, data);
 }
 HRESULT Direct3DDevicePatched::GetLight(DWORD idx, D3DLIGHT7 *data)
@@ -483,6 +500,7 @@ HRESULT Direct3DDevicePatched::GetLight(DWORD idx, D3DLIGHT7 *data)
 HRESULT Direct3DDevicePatched::SetRenderState(D3DRENDERSTATETYPE dwRenderStateType, DWORD dwRenderState)
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+	ddraw_buffer_flush_if_needed(this);
     return mWrapped->SetRenderState(dwRenderStateType, dwRenderState);
 }
 HRESULT Direct3DDevicePatched::GetRenderState(D3DRENDERSTATETYPE dwRenderStateType, LPDWORD lpdwRenderState)
@@ -566,6 +584,7 @@ HRESULT Direct3DDevicePatched::GetTexture(DWORD stage, IDirectDrawSurface7 **sur
 HRESULT Direct3DDevicePatched::SetTexture(DWORD stage, IDirectDrawSurface7 *surface)
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+	ddraw_buffer_flush_if_needed(this);
     return mWrapped->SetTexture(stage, surface);
 }
 HRESULT Direct3DDevicePatched::GetTextureStageState(DWORD dwStage, D3DTEXTURESTAGESTATETYPE d3dTexStageStateType,LPDWORD lpdwState)
@@ -576,6 +595,7 @@ HRESULT Direct3DDevicePatched::GetTextureStageState(DWORD dwStage, D3DTEXTURESTA
 HRESULT Direct3DDevicePatched::SetTextureStageState(DWORD dwStage, D3DTEXTURESTAGESTATETYPE d3dTexStageStateType,DWORD dwState)
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+	ddraw_buffer_flush_if_needed(this);
     return mWrapped->SetTextureStageState(dwStage, d3dTexStageStateType, dwState);
 }
 HRESULT Direct3DDevicePatched::ValidateDevice(LPDWORD lpdwPasses)
@@ -611,6 +631,7 @@ HRESULT Direct3DDevicePatched::Load(IDirectDrawSurface7 *dst_surface, POINT *dst
 HRESULT Direct3DDevicePatched::LightEnable(DWORD dwLightIndex,WINBOOL bEnable)
 {
     log_printf("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+	ddraw_buffer_flush_if_needed(this);
     return mWrapped->LightEnable(dwLightIndex, bEnable);
 }
 HRESULT Direct3DDevicePatched::GetLightEnable(DWORD dwLightIndex,WINBOOL *pbEnable)
@@ -852,7 +873,7 @@ HRESULT Direct3DDevicePatched::ddraw_buffer_add(Direct3DDevicePatched *device, D
         device->vertex_batch.primitive_type = primitive_type;
         device->vertex_batch.fvf = fvf;
         device->vertex_batch.stride = stride;
-	device->vertex_batch.vertices = (char*) realloc(device->vertex_batch.vertices, device->vertex_batch.vertex_batch_size * stride);
+//	device->vertex_batch.vertices = (char*) realloc(device->vertex_batch.vertices, device->vertex_batch.vertex_batch_size * stride);
     }
 
     /* Create the index */
@@ -864,6 +885,7 @@ HRESULT Direct3DDevicePatched::ddraw_buffer_add(Direct3DDevicePatched *device, D
             }
             ddraw_buffer_add_indices_trianglefan(device, vertices, vertex_count);
             break;
+        case D3DPT_TRIANGLELIST:
         case D3DPT_LINELIST:
         case D3DPT_POINTLIST:
             ddraw_buffer_add_indices_list(device, vertices, vertex_count);
@@ -877,7 +899,7 @@ HRESULT Direct3DDevicePatched::ddraw_buffer_add(Direct3DDevicePatched *device, D
 
 fail:
     if (device->vertex_batch.vertices) {
-        device->vertex_batch.vertices = NULL;
+//        device->vertex_batch.vertices = NULL;
     }
     return E_NOTIMPL;
 }
