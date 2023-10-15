@@ -38,14 +38,39 @@ static void log_printf(const char* format, ...) {
     OutputDebugString(buf);
 }
 
-static
+#define GET_TEXCOUNT_FROM_FVF(d3dvtVertexType) \
+    (((d3dvtVertexType) & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT)
+
+#define GET_TEXCOORD_SIZE_FROM_FVF(d3dvtVertexType, tex_num) \
+    (((((d3dvtVertexType) >> (16 + (2 * (tex_num)))) + 1) & 0x03) + 1)
+
 DWORD
 get_flexible_vertex_size(DWORD d3dvtVertexType)
 {
-	switch(d3dvtVertexType) {
-		case 0x2c4: return 4096;
-	}
-	return 1;
+    DWORD size = 0;
+    DWORD i;
+
+    if (d3dvtVertexType & D3DFVF_NORMAL) size += 3 * sizeof(D3DVALUE);
+    if (d3dvtVertexType & D3DFVF_DIFFUSE) size += sizeof(DWORD);
+    if (d3dvtVertexType & D3DFVF_SPECULAR) size += sizeof(DWORD);
+    if (d3dvtVertexType & D3DFVF_RESERVED1) size += sizeof(DWORD);
+    switch (d3dvtVertexType & D3DFVF_POSITION_MASK)
+    {
+        case D3DFVF_XYZ:    size += 3 * sizeof(D3DVALUE); break;
+        case D3DFVF_XYZRHW: size += 4 * sizeof(D3DVALUE); break;
+        case D3DFVF_XYZB1:  size += 4 * sizeof(D3DVALUE); break;
+        case D3DFVF_XYZB2:  size += 5 * sizeof(D3DVALUE); break;
+        case D3DFVF_XYZB3:  size += 6 * sizeof(D3DVALUE); break;
+        case D3DFVF_XYZB4:  size += 7 * sizeof(D3DVALUE); break;
+        case D3DFVF_XYZB5:  size += 8 * sizeof(D3DVALUE); break;
+        default: ERR("Unexpected position mask\n");
+    }
+    for (i = 0; i < GET_TEXCOUNT_FROM_FVF(d3dvtVertexType); i++)
+    {
+        size += GET_TEXCOORD_SIZE_FROM_FVF(d3dvtVertexType, i) * sizeof(D3DVALUE);
+    }
+
+    return size;
 }
 
 typedef HRESULT ( WINAPI* LPDIRECTDRAWCREATEEX )( GUID FAR * lpGuid, LPVOID  *lplpDD, REFIID  iid,IUnknown FAR *pUnkOuter );
