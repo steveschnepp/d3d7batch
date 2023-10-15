@@ -8,18 +8,19 @@
 #include <ddraw.h>
 #include <d3d.h>
 
-#define TRACE log_printf
+#define TRACE
 #define TRACE_(x, ...)
-#define FIXME(x, ...)
+#define INFO log_printf
+#define TRACE_(x, ...)
+#define FIXME log_printf
 #define FIXME_(x, ...)
-#define ERR(x, ...)
+#define ERR log_printf
 #define ERR_(x, ...)
-#define WARN(x, ...)
+#define WARN log_printf
 #define WARN_(x, ...)
 
 #define d3d_perf
 #define DEBUG_STDOUT 1
-
 
 static void log_printf(const char* format, ...) {
     va_list args;
@@ -764,6 +765,7 @@ static unsigned int buffer_flushs = 0;
  * and a (hopefully) huge list of vertices/indices. */
 HRESULT Direct3DDevicePatched::ddraw_buffer_flush(Direct3DDevicePatched *device)
 {
+    INFO("ddraw_buffer_flush: device %p, vertex_count %lu\n", device, device->vertex_batch.vertex_count);
     HRESULT hr;
 
     buffer_flushs ++;
@@ -836,17 +838,17 @@ HRESULT Direct3DDevicePatched::ddraw_buffer_add(Direct3DDevicePatched *device, D
     if (device->vertex_batch.vertex_count) {
         /* if already-buffered vertexes do not match the one that we want to add, flush. */
         if (primitive_type != device->vertex_batch.primitive_type) {
-            TRACE_(d3d_perf)("Buffering failed due to mismatched primitive_type %d != buffer.primitive_type %d \n", primitive_type, device->vertex_batch.primitive_type);
+            INFO("Buffering failed due to mismatched primitive_type %d != buffer.primitive_type %d \n", primitive_type, device->vertex_batch.primitive_type);
             ddraw_buffer_flush(device);
         } else if (fvf != device->vertex_batch.fvf) {
-            TRACE_(d3d_perf)("Buffering failed due to mismatched fvf %ld != buffer.fvf %ld \n", fvf, device->vertex_batch.fvf);
+            INFO("Buffering failed due to mismatched fvf %ld != buffer.fvf %ld \n", fvf, device->vertex_batch.fvf);
             ddraw_buffer_flush(device);
         } else if (device->vertex_batch.vertex_count + vertex_count * 2 > device->vertex_batch.vertex_batch_size) {
             /* We double the number of vertices to add since
              * - it is a very fast mul
              * - the number will never more than double
              * - the precision it offers is good enough */
-            FIXME_(d3d_perf)("Full buffer vertex_batch.vertex_count %u, vertex_count %lu, vertex_batch_size %u \n",
+            FIXME("Full buffer vertex_batch.vertex_count %u, vertex_count %lu, vertex_batch_size %u \n",
 			    device->vertex_batch.vertex_count, vertex_count, device->vertex_batch.vertex_batch_size);
             ddraw_buffer_flush(device);
 
