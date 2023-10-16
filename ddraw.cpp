@@ -288,7 +288,7 @@ struct vertex_batch {
     D3DPRIMITIVETYPE primitive_type;
     DWORD fvf;
     UINT stride;
-    char vertices[65535*1024];
+    char *vertices;
 
     /* vertex_count arg has a DWORD type in D3D calls,
      * but we won't go beyond an unsigned int capacity, as documentation says
@@ -307,6 +307,7 @@ static HRESULT ddraw_buffer_add(Direct3DDevicePatched *device, D3DPRIMITIVETYPE 
 static void ddraw_buffer_add_indices_list(Direct3DDevicePatched *device, void* vertices, DWORD vertex_count);
 
 public:
+
 static HRESULT ddraw_buffer_flush(Direct3DDevicePatched *device);
     /* Vertex buffer for squashing DrawPrimitive() calls before sending it to Direct3D7 */
     struct vertex_batch vertex_batch;
@@ -315,6 +316,7 @@ static HRESULT ddraw_buffer_flush(Direct3DDevicePatched *device);
         WRAP("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
 	vertex_batch.vertex_count = 0;
 	vertex_batch.vertex_batch_size = VERTEX_BATCH_SIZE_INITIAL;
+	vertex_batch.vertices = 0;
     }
 
     /* IUnknown */
@@ -842,6 +844,8 @@ HRESULT Direct3DDevicePatched::ddraw_buffer_add(Direct3DDevicePatched *device, D
             device, primitive_type, fvf, vertices, vertex_count, flags, stride);
     buffer_adds ++;
 
+    int orig_vertex_batch_size = device->vertex_batch.vertex_batch_size;
+
     if (device->vertex_batch.vertex_count) {
         /* if already-buffered vertexes do not match the one that we want to add, flush. */
         if (primitive_type != device->vertex_batch.primitive_type) {
@@ -859,9 +863,10 @@ HRESULT Direct3DDevicePatched::ddraw_buffer_add(Direct3DDevicePatched *device, D
 			    device->vertex_batch.vertex_count, vertex_count, device->vertex_batch.vertex_batch_size);
             ddraw_buffer_flush(device);
 
-	    /* Doubling size until quite big */
+	    /* Adding 30% until quite big */
 	    if (device->vertex_batch.vertex_batch_size < VERTEX_BATCH_SIZE_MAX)
-		    device->vertex_batch.vertex_batch_size *= 2;
+		    device->vertex_batch.vertex_batch_size *= 1.3;
+
         }
     }
 
@@ -882,7 +887,8 @@ HRESULT Direct3DDevicePatched::ddraw_buffer_add(Direct3DDevicePatched *device, D
         device->vertex_batch.primitive_type = primitive_type;
         device->vertex_batch.fvf = fvf;
         device->vertex_batch.stride = stride;
-//	device->vertex_batch.vertices = (char*) realloc(device->vertex_batch.vertices, device->vertex_batch.vertex_batch_size * stride);
+	if (device->vertex_batch.vertices == 0 || device->vertex_batch.vertex_batch_size != orig_vertex_batch_size)
+		device->vertex_batch.vertices = (char*) realloc(device->vertex_batch.vertices, device->vertex_batch.vertex_batch_size * stride);
     }
 
     /* Create the index */
