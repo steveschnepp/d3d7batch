@@ -960,3 +960,9 @@ void ddraw_buffer_histogram(Direct3DDevicePatched *device) {
 
     device->DrawPrimitiveUnbuffered(D3DPT_LINELIST, CUSTOMFVF, vertices, 512, NULL);
 }
+
+HRESULT Direct3DDevicePatched::DrawPrimitiveUnbuffered(D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count, DWORD flags)
+{
+    WRAP("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    return mWrapped->DrawPrimitive(primitive_type, fvf, vertices, vertex_count, flags);
+}
