@@ -22,8 +22,10 @@
 
 #define d3d_perf
 #define DEBUG_STDOUT 0
+#define DEBUG 0
 
 static void lprintf(const char* format, ...) {
+#if DEBUG
     va_list args;
     char buf[2048];
 
@@ -38,6 +40,7 @@ static void lprintf(const char* format, ...) {
 #endif
 
     OutputDebugString(buf);
+#endif
 }
 
 #define GET_TEXCOUNT_FROM_FVF(d3dvtVertexType) \
