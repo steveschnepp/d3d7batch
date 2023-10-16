@@ -414,11 +414,14 @@ public:
     HRESULT STDMETHODCALLTYPE EvictManagedTextures();
 };
 
+void ddraw_buffer_histogram(Direct3DDevicePatched *device);
+
 /* Implementation of the wrapper */
 HRESULT Direct3DDevicePatched::BeginScene() { WRAP("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
     return mWrapped->BeginScene(); }
 HRESULT Direct3DDevicePatched::EndScene() { WRAP("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
 	ddraw_buffer_flush_if_needed(this);
+    ddraw_buffer_histogram(this);
     return mWrapped->EndScene(); }
 
 HRESULT Direct3DDevicePatched::GetCaps(D3DDEVICEDESC7 *desc) { WRAP("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
@@ -908,4 +911,52 @@ fail:
 //        device->vertex_batch.vertices = NULL;
     }
     return E_NOTIMPL;
+}
+
+struct CUSTOMVERTEX
+{
+    FLOAT x, y, z, rhw;
+    DWORD color;
+};
+
+#define CUSTOMFVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
+static DWORD D3DCOLOR_ARGB(char a, char r, char g, char b) {
+    DWORD d = 0;
+    d |= a <<  0;
+    d |= r <<  8;
+    d |= g << 16;
+    d |= b << 24;
+    return d;
+}
+
+// #define D3DCOLOR_ARGB(x, ...)
+
+static float histogram[256] = {0};
+
+void ddraw_buffer_histogram(Direct3DDevicePatched *device) {
+    static int histo_idx = -1;
+    histo_idx = (histo_idx + 1) % 256;
+    histogram[histo_idx] = device->vertex_batch.vertex_count;
+
+    CUSTOMVERTEX vertices[512];
+
+    for (int i = 0; i < 256; i ++) {
+        int vtx_idx = i*2;
+        vertices[vtx_idx].x = 0.0 + i;
+        vertices[vtx_idx].y = 0.0;
+        vertices[vtx_idx].z = -1.f;
+        vertices[vtx_idx].rhw = 1.f;
+        vertices[vtx_idx].color = D3DCOLOR_ARGB(255, 0, 255, 0);
+
+        vtx_idx ++;
+        vertices[vtx_idx].x = 0.f + i;
+        vertices[vtx_idx].y = 0.f + histogram[i];
+        vertices[vtx_idx].z = -1.f;
+        vertices[vtx_idx].rhw = 1.f;
+        vertices[vtx_idx].color = D3DCOLOR_ARGB(0, 0, 255, 0);
+    }
+
+    INFO("ddraw_buffer_histogram");
+
+    device->DrawPrimitiveUnbuffered(D3DPT_LINELIST, CUSTOMFVF, vertices, 512, NULL);
 }
