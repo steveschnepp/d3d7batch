@@ -372,6 +372,9 @@ static HRESULT ddraw_buffer_flush(Direct3DDevicePatched *device);
    HRESULT STDMETHODCALLTYPE SetClipPlane(DWORD dwIndex,D3DVALUE *pPlaneEquation);
    HRESULT STDMETHODCALLTYPE GetClipPlane(DWORD dwIndex,D3DVALUE *pPlaneEquation);
    HRESULT STDMETHODCALLTYPE GetInfo(DWORD info_id, void *info, DWORD info_size);
+
+   // Adding an extra, unbuffered DrawPrimitive()
+   HRESULT STDMETHODCALLTYPE DrawPrimitiveUnbuffered(D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count, DWORD flags);
 };
 
 static HRESULT ddraw_buffer_flush_if_needed(Direct3DDevicePatched *device) {
