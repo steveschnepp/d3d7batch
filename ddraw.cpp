@@ -86,6 +86,12 @@ LPDIRECTDRAW7 orig_lpDD7;
 class Direct3D7Patched;
 class Direct3DDevicePatched;
 
+/* static counters. No need to protect them too much, it's just for basics stats
+ * therefore their performance is much more important than accurary */
+static unsigned int buffer_adds = 0;
+static unsigned int buffer_calls = 0;
+static unsigned int buffer_vertex_adds = 0;
+
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
     const char *DllMain_REASON[] = { "DLL_PROCESS_DETACH", "DLL_PROCESS_ATTACH", "DLL_THREAD_ATTACH", "DLL_THREAD_DETACH" };
 
@@ -378,10 +384,10 @@ static HRESULT ddraw_buffer_flush(Direct3DDevicePatched *device);
    HRESULT STDMETHODCALLTYPE GetClipPlane(DWORD dwIndex,D3DVALUE *pPlaneEquation);
    HRESULT STDMETHODCALLTYPE GetInfo(DWORD info_id, void *info, DWORD info_size);
 
-   // Adding an extra, unbuffered DrawPrimitive()
    HRESULT STDMETHODCALLTYPE DrawPrimitiveUnbuffered(D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count, DWORD flags);
 };
 
+inline
 static HRESULT ddraw_buffer_flush_if_needed(Direct3DDevicePatched *device) {
     /* Nothing to do if it is empty */
     if (! device)
@@ -426,6 +432,9 @@ HRESULT Direct3DDevicePatched::BeginScene() { WRAP("%s:%d \t%s\n", __FILE__, __L
     return mWrapped->BeginScene(); }
 HRESULT Direct3DDevicePatched::EndScene() { WRAP("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
 	ddraw_buffer_flush_if_needed(this);
+
+    INFO("EndScene: buffer_adds %d buffer_calls %d buffer_vertex_adds\n", buffer_adds, buffer_calls, buffer_vertex_adds);
+
     ddraw_buffer_histogram(this);
     return mWrapped->EndScene(); }
 
@@ -547,7 +556,7 @@ HRESULT Direct3DDevicePatched::DrawPrimitive(D3DPRIMITIVETYPE primitive_type, DW
     if (hr == D3D_OK) return D3D_OK;
 
     /* buffering failed, delegate */
-    return mWrapped->DrawPrimitive(primitive_type, fvf, vertices, vertex_count, flags);
+    return this->DrawPrimitiveUnbuffered(primitive_type, fvf, vertices, vertex_count, flags);
 }
 HRESULT Direct3DDevicePatched::DrawIndexedPrimitive(D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count, WORD *indices, DWORD index_count, DWORD flags)
 {
@@ -766,10 +775,6 @@ cached:
 
 /** Buffering **/
 
-/* static counters. No need to protect them too much, it's just for basics stats
- * therefore their performance is much more important than accurary */
-static unsigned int buffer_adds = 0;
-static unsigned int buffer_flushs = 0;
 
 /* Flushing the buffer if it isn't empty.
  *
@@ -780,8 +785,6 @@ HRESULT Direct3DDevicePatched::ddraw_buffer_flush(Direct3DDevicePatched *device)
     INFO("ddraw_buffer_flush: device %p, vertex_count %lu\n", device, device->vertex_batch.vertex_count);
     HRESULT hr;
 
-    buffer_flushs ++;
-
     // Delegate the call with the full buffer
     {
 	D3DPRIMITIVETYPE primitive_type = device->vertex_batch.primitive_type;
@@ -791,13 +794,10 @@ HRESULT Direct3DDevicePatched::ddraw_buffer_flush(Direct3DDevicePatched *device)
 	DWORD vertex_count = device->vertex_batch.vertex_count;
 	DWORD flags = 0;
 
-	hr = device->mWrapped->DrawPrimitive(primitive_type, fvf, vertices, vertex_count, flags);
+	hr = device->DrawPrimitiveUnbuffered(primitive_type, fvf, vertices, vertex_count, flags);
     }
 
 done:
-
-//    free(device->vertex_batch.vertices);
-//    device->vertex_batch.vertices = NULL;
 
     /* Reset the buffer */
     device->vertex_batch.vertex_count = 0;
@@ -925,53 +925,66 @@ fail:
 struct CUSTOMVERTEX
 {
     FLOAT x, y, z, rhw;
-    DWORD color;
+    D3DCOLOR color;
 };
 
 #define CUSTOMFVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
-static DWORD D3DCOLOR_ARGB(char a, char r, char g, char b) {
-    DWORD d = 0;
-    d |= a <<  0;
-    d |= r <<  8;
-    d |= g << 16;
-    d |= b << 24;
+static D3DCOLOR D3DCOLOR_ARGB(char a, char r, char g, char b) {
+    D3DCOLOR d = 0;
+    d |= a << 24;
+    d |= r << 16;
+    d |= g << 8;
+    d |= b << 0;
     return d;
 }
 
 // #define D3DCOLOR_ARGB(x, ...)
 
-static float histogram[256] = {0};
+static float histogram_buffersize[256] = {0};
 
 void ddraw_buffer_histogram(Direct3DDevicePatched *device) {
-    static int histo_idx = -1;
-    histo_idx = (histo_idx + 1) % 256;
-    histogram[histo_idx] = device->vertex_batch.vertex_count;
+    static int histo_idx = 0;
+    memmove(histogram_buffersize+1, histogram_buffersize, sizeof(float)*255);
+    histogram_buffersize[0] = (float) buffer_vertex_adds / (float) buffer_calls;
+
+    buffer_adds = 0;
+    buffer_calls = 0;
+    buffer_vertex_adds = 0;
 
     CUSTOMVERTEX vertices[512];
+    const int vertices_nb = sizeof(vertices) / sizeof(CUSTOMVERTEX);
 
-    for (int i = 0; i < 256; i ++) {
+    for (int i = 0; i < vertices_nb/2; i ++) {
         int vtx_idx = i*2;
-        vertices[vtx_idx].x = 0.0 + i;
-        vertices[vtx_idx].y = 0.0;
-        vertices[vtx_idx].z = -1.f;
+        vertices[vtx_idx].x = 1.0 + i;
+        vertices[vtx_idx].z = -128. + i;
         vertices[vtx_idx].rhw = 1.f;
-        vertices[vtx_idx].color = D3DCOLOR_ARGB(255, 0, 255, 0);
 
-        vtx_idx ++;
-        vertices[vtx_idx].x = 0.f + i;
-        vertices[vtx_idx].y = 0.f + histogram[i];
-        vertices[vtx_idx].z = -1.f;
-        vertices[vtx_idx].rhw = 1.f;
-        vertices[vtx_idx].color = D3DCOLOR_ARGB(0, 0, 255, 0);
+	if (histogram_buffersize[i] < 10)
+		vertices[vtx_idx].color = 0x5fff0000; // Vertex is semi-transparent red
+	else if (histogram_buffersize[i] < 100)
+		vertices[vtx_idx].color = 0x5fcccc00; // Vertex is semi-transparent yellow
+	else
+		vertices[vtx_idx].color = 0x5f00ff00; // Vertex is semi-transparent green
+
+        vertices[vtx_idx].y = 1.0;
+
+        vertices[vtx_idx+1] = vertices[vtx_idx];
+        vertices[vtx_idx+1].y += histogram_buffersize[i] / 10.;
     }
 
-    INFO("ddraw_buffer_histogram");
-
-    device->DrawPrimitiveUnbuffered(D3DPT_LINELIST, CUSTOMFVF, vertices, 512, NULL);
+    // Draw with Zbuffering disabled
+    DWORD old_renderstate;
+    device->GetRenderState(D3DRENDERSTATE_ZENABLE, &old_renderstate);
+    device->SetRenderState(D3DRENDERSTATE_ZENABLE, 0);
+    device->DrawPrimitiveUnbuffered(D3DPT_LINELIST, CUSTOMFVF, vertices, vertices_nb, NULL);
+    device->SetRenderState(D3DRENDERSTATE_ZENABLE, old_renderstate);
 }
 
 HRESULT Direct3DDevicePatched::DrawPrimitiveUnbuffered(D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count, DWORD flags)
 {
     WRAP("%s:%d \t%s\n", __FILE__, __LINE__, __FUNCTION__);
+    buffer_vertex_adds += vertex_count;
+    buffer_calls += 1;
     return mWrapped->DrawPrimitive(primitive_type, fvf, vertices, vertex_count, flags);
 }
