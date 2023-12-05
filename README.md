@@ -15,7 +15,7 @@ make
 
 ## Install
 
-0. compile `ddraw.dll`
+0. compile `ddraw.dll` or download it from the [releases](https://github.com/steveschnepp/d3d7batch/releases)
 1. drop the `ddraw.dll` into the same folder as `gc.exe`.
 2. do `export WINEDLLOVERRIDES="ddraw=n,b"`
 3. run `wine gc.exe`
